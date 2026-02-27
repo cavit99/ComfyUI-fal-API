@@ -19,6 +19,7 @@ class FalConfig:
     _instance = None
     _client = None
     _key = None
+    _key_name = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -61,6 +62,20 @@ class FalConfig:
         if self._client is None:
             self._client = SyncClient(key=self._key)
         return self._client
+
+    def set_key(self, key, name=None):
+        """Set a new API key at runtime, resetting the client."""
+        self._key = key
+        self._key_name = name
+        self._client = None
+        os.environ["FAL_KEY"] = key
+        print(f"FAL API key switched to: {name or 'unnamed'}")
+
+    def get_key_name(self):
+        """Get the display name of the active key."""
+        if self._key_name:
+            return self._key_name
+        return "config.ini / env"
 
     def get_key(self):
         """Get the FAL API key."""

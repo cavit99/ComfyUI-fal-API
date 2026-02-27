@@ -172,6 +172,10 @@ After installation and configuration, restart ComfyUI. The new nodes will be ava
     - custom (Get model name from openrouter)
   - Supports various tasks such as image captioning, visual question answering, and more
 
+### Utilities
+
+- **FAL API Key Manager (fal)**: Switch between named fal API keys from the ComfyUI frontend. Keys are stored in browser localStorage and sent to the server before each queue execution. Falls back to config.ini or environment variable when no key is set.
+
 ## Troubleshooting
 
 If you encounter any errors during installation or usage, try the following:

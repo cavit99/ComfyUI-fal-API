@@ -8,7 +8,10 @@ node_list = [
     "vlm_node",
     "trainer_node",
     "upscaler_node",
+    "key_manager_node",
 ]
+
+WEB_DIRECTORY = "./web"
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
@@ -23,4 +26,4 @@ for module_name in node_list:
     }
 
 
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
