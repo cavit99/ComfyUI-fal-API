@@ -2394,18 +2394,22 @@ class NanoBanana2:
                 "prompt": ("STRING", {"default": "", "multiline": True}),
             },
             "optional": {
-                "images": ("IMAGE",),
+                "image_1": ("IMAGE",),
+                "image_2": ("IMAGE",),
+                "image_3": ("IMAGE",),
+                "image_4": ("IMAGE",),
+                "images": ("IMAGE", {"default": None, "multiple": True}),
                 "num_images": ("INT", {"default": 1, "min": 1, "max": 4}),
+                "seed": ("INT", {"default": -1}),
                 "aspect_ratio": (
                     ["auto", "21:9", "16:9", "3:2", "4:3", "5:4", "1:1", "4:5", "3:4", "2:3", "9:16"],
-                    {"default": "1:1"},
+                    {"default": "auto"},
                 ),
                 "output_format": (["jpeg", "png", "webp"], {"default": "png"}),
                 "safety_tolerance": (["1", "2", "3", "4", "5", "6"], {"default": "4"}),
-                "resolution": (["1K", "2K", "4K"], {"default": "1K"}),
+                "resolution": (["0.5K", "1K", "2K", "4K"], {"default": "1K"}),
                 "limit_generations": ("BOOLEAN", {"default": True}),
                 "enable_web_search": ("BOOLEAN", {"default": False}),
-                "enable_google_search": ("BOOLEAN", {"default": False}),
                 "sync_mode": ("BOOLEAN", {"default": False}),
             },
         }
@@ -2417,21 +2421,28 @@ class NanoBanana2:
     def generate_image(
         self,
         prompt,
+        image_1=None,
+        image_2=None,
+        image_3=None,
+        image_4=None,
         images=None,
         num_images=1,
-        aspect_ratio="1:1",
+        seed=-1,
+        aspect_ratio="auto",
         output_format="png",
         safety_tolerance="4",
         resolution="1K",
         limit_generations=True,
         enable_web_search=False,
-        enable_google_search=False,
         sync_mode=False,
     ):
-        # Prepare image URLs from optional input, limit to 14 images max
-        if images is not None and hasattr(images, 'shape') and len(images.shape) == 4 and images.shape[0] > 14:
-            images = images[:14]
-        image_urls = ImageUtils.prepare_images(images)
+        # Collect optional edit images from dedicated sockets and batch input.
+        single_images = [img for img in [image_1, image_2, image_3, image_4] if img is not None]
+        single_image_urls = ImageUtils.prepare_images(single_images)
+
+        batch_image_urls = ImageUtils.prepare_images(images)
+        # Fal nano-banana-2/edit expects image_urls as an array.
+        image_urls = single_image_urls + batch_image_urls
 
         # Build base arguments
         arguments = {
@@ -2443,9 +2454,10 @@ class NanoBanana2:
             "resolution": resolution,
             "limit_generations": limit_generations,
             "enable_web_search": enable_web_search,
-            "enable_google_search": enable_google_search,
             "sync_mode": sync_mode,
         }
+        if seed != -1:
+            arguments["seed"] = seed
 
         # Conditional endpoint routing based on whether ANY images provided
         if len(image_urls) > 0:
@@ -2453,8 +2465,6 @@ class NanoBanana2:
             arguments["image_urls"] = image_urls
         else:
             endpoint = "fal-ai/nano-banana-2"
-            if aspect_ratio == "auto":
-                arguments["aspect_ratio"] = "1:1"
 
         try:
             result = ApiHandler.submit_and_get_result(endpoint, arguments)
