@@ -7,6 +7,12 @@ def upload_image(image):
     return ImageUtils.upload_image(image)
 
 
+def normalize_enum_prefix(value, allowed, fallback):
+    """Normalize 'X (...label...)' style UI values back to raw enum token."""
+    token = str(value).strip().split()[0]
+    return token if token in allowed else fallback
+
+
 class Sana:
     @classmethod
     def INPUT_TYPES(cls):
@@ -1807,7 +1813,16 @@ class Flux2Max:
                 "width": ("INT", {"default": 512, "min": 1, "max": 14142, "step": 1}),
                 "height": ("INT", {"default": 512, "min": 1, "max": 14142, "step": 1}),
                 "seed": ("INT", {"default": -1}),
-                "safety_tolerance": (["1", "2", "3", "4", "5"], {"default": "2"}),
+                "safety_tolerance": (
+                    [
+                        "1 (Most restrictive)",
+                        "2",
+                        "3",
+                        "4",
+                        "5 (Least restrictive)",
+                    ],
+                    {"default": "5 (Least restrictive)"},
+                ),
                 "enable_safety_checker": ("BOOLEAN", {"default": True}),
                 "output_format": (["jpeg", "png"], {"default": "jpeg"}),
                 "sync_mode": ("BOOLEAN", {"default": False}),
@@ -1830,7 +1845,7 @@ class Flux2Max:
         width=512,
         height=512,
         seed=-1,
-        safety_tolerance="2",
+        safety_tolerance="5 (Least restrictive)",
         enable_safety_checker=True,
         output_format="jpeg",
         sync_mode=False,
@@ -1840,6 +1855,11 @@ class Flux2Max:
         single_image_urls = ImageUtils.prepare_images(single_images)
         batch_image_urls = ImageUtils.prepare_images(images)
         image_urls = single_image_urls + batch_image_urls
+        safety_tolerance = normalize_enum_prefix(
+            safety_tolerance,
+            {"1", "2", "3", "4", "5"},
+            "5",
+        )
 
         arguments = {
             "prompt": prompt,
@@ -2500,7 +2520,17 @@ class NanoBanana2:
                     {"default": "auto"},
                 ),
                 "output_format": (["jpeg", "png", "webp"], {"default": "png"}),
-                "safety_tolerance": (["1", "2", "3", "4", "5", "6"], {"default": "4"}),
+                "safety_tolerance": (
+                    [
+                        "1 (Most restrictive)",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6 (Least restrictive)",
+                    ],
+                    {"default": "6 (Least restrictive)"},
+                ),
                 "resolution": (["0.5K", "1K", "2K", "4K"], {"default": "1K"}),
                 "limit_generations": ("BOOLEAN", {"default": True}),
                 "enable_web_search": ("BOOLEAN", {"default": False}),
@@ -2524,7 +2554,7 @@ class NanoBanana2:
         seed=-1,
         aspect_ratio="auto",
         output_format="png",
-        safety_tolerance="4",
+        safety_tolerance="6 (Least restrictive)",
         resolution="1K",
         limit_generations=True,
         enable_web_search=False,
@@ -2537,6 +2567,11 @@ class NanoBanana2:
         batch_image_urls = ImageUtils.prepare_images(images)
         # Fal nano-banana-2/edit expects image_urls as an array.
         image_urls = single_image_urls + batch_image_urls
+        safety_tolerance = normalize_enum_prefix(
+            safety_tolerance,
+            {"1", "2", "3", "4", "5", "6"},
+            "6",
+        )
 
         # Build base arguments
         arguments = {
