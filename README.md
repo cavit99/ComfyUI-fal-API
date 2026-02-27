@@ -74,6 +74,7 @@ After installation and configuration, restart ComfyUI. The new nodes will be ava
 - **Flux 2 Edit (fal)**: Advanced image editing with Flux 2
 - **Flux 2 Flex Edit (fal)**: Flexible image editing with Flux 2
 - **Flux 2 Pro Edit (fal)**: Professional image editing with Flux 2
+- **Flux 2 Max (fal)**: Unified text-to-image and image editing node for Flux 2 Max with native multi-image edit input
 - **Kling Image o1 (fal)**: High-quality image generation with Kling Image o1. Use ```@Image1``` and other numbers to control which input images to use for what purpose.
 - **Kling V1.5 Kolors Virtual Try-On (fal)**: Virtual try-on for clothing using Kling V1.5 Kolors. Head to Toe full body image required or it will return a black image. Very sensitive about input images.
 - **ByteDance Seedream V4.5 Edit (fal)**: Advanced image editing with ByteDance Seedream V4.5. Use ```Figure 1``` and other numbers to control which input images to use for what purpose.

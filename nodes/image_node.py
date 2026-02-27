@@ -1778,6 +1778,100 @@ class Flux2ProEdit:
             return ApiHandler.handle_image_generation_error("Flux 2 Pro Edit", e)
         
         
+class Flux2Max:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "prompt": ("STRING", {"default": "", "multiline": True}),
+            },
+            "optional": {
+                "image_1": ("IMAGE",),
+                "image_2": ("IMAGE",),
+                "image_3": ("IMAGE",),
+                "image_4": ("IMAGE",),
+                "images": ("IMAGE", {"default": None, "multiple": True}),
+                "image_size": (
+                    [
+                        "auto",
+                        "square_hd",
+                        "square",
+                        "portrait_4_3",
+                        "portrait_16_9",
+                        "landscape_4_3",
+                        "landscape_16_9",
+                        "custom",
+                    ],
+                    {"default": "landscape_4_3"},
+                ),
+                "width": ("INT", {"default": 512, "min": 1, "max": 14142, "step": 1}),
+                "height": ("INT", {"default": 512, "min": 1, "max": 14142, "step": 1}),
+                "seed": ("INT", {"default": -1}),
+                "safety_tolerance": (["1", "2", "3", "4", "5"], {"default": "2"}),
+                "enable_safety_checker": ("BOOLEAN", {"default": True}),
+                "output_format": (["jpeg", "png"], {"default": "jpeg"}),
+                "sync_mode": ("BOOLEAN", {"default": False}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "generate_image"
+    CATEGORY = "FAL/Image"
+
+    def generate_image(
+        self,
+        prompt,
+        image_1=None,
+        image_2=None,
+        image_3=None,
+        image_4=None,
+        images=None,
+        image_size="landscape_4_3",
+        width=512,
+        height=512,
+        seed=-1,
+        safety_tolerance="2",
+        enable_safety_checker=True,
+        output_format="jpeg",
+        sync_mode=False,
+    ):
+        # Keep all provided images in one request so model can reason across them.
+        single_images = [img for img in [image_1, image_2, image_3, image_4] if img is not None]
+        single_image_urls = ImageUtils.prepare_images(single_images)
+        batch_image_urls = ImageUtils.prepare_images(images)
+        image_urls = single_image_urls + batch_image_urls
+
+        arguments = {
+            "prompt": prompt,
+            "safety_tolerance": safety_tolerance,
+            "enable_safety_checker": enable_safety_checker,
+            "output_format": output_format,
+            "sync_mode": sync_mode,
+        }
+
+        if seed != -1:
+            arguments["seed"] = seed
+
+        if image_size == "custom":
+            arguments["image_size"] = {"width": width, "height": height}
+        elif image_size == "auto" and len(image_urls) == 0:
+            # flux-2-max text endpoint doesn't accept auto; use its default aspect.
+            arguments["image_size"] = "landscape_4_3"
+        else:
+            arguments["image_size"] = image_size
+
+        if len(image_urls) > 0:
+            endpoint = "fal-ai/flux-2-max/edit"
+            arguments["image_urls"] = image_urls
+        else:
+            endpoint = "fal-ai/flux-2-max"
+
+        try:
+            result = ApiHandler.submit_and_get_result(endpoint, arguments)
+            return ResultProcessor.process_image_result(result)
+        except Exception as e:
+            return ApiHandler.handle_image_generation_error("Flux 2 Max", e)
+
 
 class Imagen4PreviewNode:
     @classmethod
@@ -3290,6 +3384,7 @@ NODE_CLASS_MAPPINGS = {
     "Flux2Edit_fal": Flux2Edit,
     "Flux2FlexEdit_fal": Flux2FlexEdit,
     "Flux2ProEdit_fal": Flux2ProEdit,
+    "Flux2Max_fal": Flux2Max,
     "KlingImageO1_fal": KlingImageO1,
     "ByteDanceSeedreamV45Edit_fal": ByteDanceSeedreamV45Edit,
     "KlingV15KolorsVirtualTryOn_fal": KlingV15KolorsVirtualTryOn,
@@ -3350,6 +3445,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Flux2Edit_fal": "Flux2 Edit (fal)",
     "Flux2FlexEdit_fal": "Flux2 Flex Edit (fal)",
     "Flux2ProEdit_fal": "Flux2 Pro Edit (fal)",
+    "Flux2Max_fal": "Flux 2 Max (fal)",
     "Flux2LoraGalleryVirtualTryOn_fal": "Flux2LoraGallery Virtual Try-On (fal)",
     "KlingImageO1_fal": "Kling Image o1 (fal)",
     "KlingV15KolorsVirtualTryOn_fal": "Kling V1.5 Kolors Virtual Try-On (fal)", 
